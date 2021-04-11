@@ -1,7 +1,7 @@
 package v1
 
 import (
-	"fmt"
+	"encoding/json"
 	"gin-vue-admin/global"
 	"gin-vue-admin/model"
 	"gin-vue-admin/model/request"
@@ -227,13 +227,28 @@ func CheckSign(c *gin.Context) {
 	if err != nil{
 		global.GVA_LOG.Error("数据抓取失败！", zap.Any("err", err))
 		response.FailWithMessage("数据抓取失败", c)
+		return
 	}
 	defer resp.Body.Close()
 	body , err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		global.GVA_LOG.Error("数据读取失败！", zap.Any("err", err))
 		response.FailWithMessage("数据读取失败", c)
+		return
 	}
-	fmt.Println(string(body))
-	response.OkWithMessage(sign, c)
+	newBody := &response.RespShopGoods{}
+	//数据映射
+	err = json.Unmarshal(body,newBody)
+	if err != nil{
+		global.GVA_LOG.Error("json序列化失败！", zap.Any("err", err))
+		response.FailWithMessage("json序列化失败", c)
+		return 
+	}
+	
+	if err = service.InsertMore(&newBody.Data.List); err != nil {
+		global.GVA_LOG.Error("批量插入数据失败", zap.Any("err", err))
+		response.FailWithMessage("批量插入数据失败", c)
+		return
+	}
+	response.Result(200,newBody,"", c)
 }
