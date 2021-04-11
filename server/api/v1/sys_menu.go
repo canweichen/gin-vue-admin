@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"fmt"
 	"gin-vue-admin/global"
 	"gin-vue-admin/model"
 	"gin-vue-admin/model/request"
@@ -9,6 +10,8 @@ import (
 	"gin-vue-admin/utils"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+	"io/ioutil"
+	"net/http"
 )
 
 // @Tags AuthorityMenu
@@ -216,4 +219,21 @@ func GetMenuList(c *gin.Context) {
 			PageSize: pageInfo.PageSize,
 		}, "获取成功", c)
 	}
+}
+
+func CheckSign(c *gin.Context) {
+	sign := utils.BindSign()
+	resp , err := http.Get(sign)
+	if err != nil{
+		global.GVA_LOG.Error("数据抓取失败！", zap.Any("err", err))
+		response.FailWithMessage("数据抓取失败", c)
+	}
+	defer resp.Body.Close()
+	body , err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		global.GVA_LOG.Error("数据读取失败！", zap.Any("err", err))
+		response.FailWithMessage("数据读取失败", c)
+	}
+	fmt.Println(string(body))
+	response.OkWithMessage(sign, c)
 }

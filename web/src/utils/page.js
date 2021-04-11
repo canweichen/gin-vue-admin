@@ -1,4 +1,4 @@
-const title = 'GIN-VUE-ADMIN'
+const title = '蓝梦科技'
 
 export default function getPageTitle(pageTitle) {
     if (pageTitle) {
