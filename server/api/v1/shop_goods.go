@@ -2,12 +2,14 @@ package v1
 
 import (
 	"encoding/json"
+	"fmt"
 	"gin-vue-admin/global"
 	"gin-vue-admin/model/response"
 	"gin-vue-admin/service"
 	"gin-vue-admin/utils"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -54,7 +56,14 @@ func GetGoodsList(c *gin.Context) {
 // @Success 200 {string} string "{"success":true,"data":{},"msg":"获取成功"}"
 // @Router /goods/postPullGoodsList [post]
 func PostPullGoodsList(c *gin.Context) {
-	sign, err := utils.BindRequestParams("GetGoodsList", 1)
+	//临时存储页码
+	key := "pull:goods:pid"
+	pageId, _ := global.GVA_REDIS.Get(key).Result()
+	if pageId == "" {
+		pageId = "1"
+	}
+	fmt.Println(pageId)
+	sign, err := utils.BindRequestParams("GetGoodsList", pageId)
 	if err != nil {
 		global.GVA_LOG.Error("验签失败", zap.Any("err", err))
 		response.FailWithMessage("验签失败", c)
@@ -81,10 +90,17 @@ func PostPullGoodsList(c *gin.Context) {
 		response.FailWithMessage("json序列化失败", c)
 		return
 	}
-
-	if err = service.InsertMore(&newBody.Data.List); err != nil {
+	//页码写入缓存
+	timer := time.Duration(time.Now().Unix()) + 30*time.Second
+	err = global.GVA_REDIS.Set(key, newBody.Data.PageId, timer).Err()
+	if err != nil {
+		global.GVA_LOG.Error("写入缓存失败", zap.Any("err", err))
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	if err = service.InsertMore(newBody.Data.List); err != nil {
 		global.GVA_LOG.Error("批量插入数据失败", zap.Any("err", err))
-		response.FailWithMessage("批量插入数据失败", c)
+		response.FailWithMessage("批量插入数据失败:"+err.Error(), c)
 		return
 	}
 	response.Result(0, newBody, "拉取成功", c)

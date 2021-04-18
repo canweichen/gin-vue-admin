@@ -23,5 +23,9 @@ func main() {
 		db, _ := global.GVA_DB.DB()
 		defer db.Close()
 	}
+	global.GVA_REDIS = initialize.Redis()
+	if global.GVA_REDIS != nil {
+		defer global.GVA_REDIS.Close()
+	}
 	core.RunWindowsServer()
 }

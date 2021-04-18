@@ -26,7 +26,30 @@ func GetGoodsList(page, limit int, title string) (goodsList []model.ShopGoods, t
 //@description: 批量插入商品记录
 //@param: goodsList *[]model.ShopGoods
 //@return: err error
-func InsertMore(goodsList *[]model.ShopGoods) error {
-	err := global.GVA_DB.Create(goodsList).Error
+func InsertMore(goodsList []model.ShopGoods) error {
+	//获取主键值
+	var ids []uint
+	for _, item := range goodsList {
+		ids = append(ids, item.Id)
+	}
+	var existsIds []uint
+	existGoods := []model.ShopGoods{}
+	//查询数据库是否存在相应记录
+	err := global.GVA_DB.Model(&model.ShopGoods{}).Select("id").Find(&existGoods, ids).Error
+	if err != nil {
+		return err
+	}
+	//删除重复的记录
+	for _, val := range existGoods {
+		existsIds = append(existsIds, val.Id)
+	}
+	if len(existsIds) > 0 {
+		err = global.GVA_DB.Delete(&model.ShopGoods{}, existsIds).Error
+		if err != nil {
+			return err
+		}
+	}
+	//插入记录
+	err = global.GVA_DB.Create(&goodsList).Error
 	return err
 }

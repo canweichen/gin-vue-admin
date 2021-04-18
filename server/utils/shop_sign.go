@@ -39,34 +39,12 @@ func BindSign() map[string]interface{} {
 }
 
 //拉取商品列表
-func BindRequestParams(key string, page int) (string, error) {
+func BindRequestParams(key string, page interface{}) (string, error) {
 	if _, ok := urlMap[key]; !ok {
 		return "", errors.New("无效key")
 	}
 	sign := BindSign()
-	return fmt.Sprintf("%s?appKey=%s&nonce=%s&pageId=%d&pageSize=100&signRan=%s&timer=%d&version=%s&commissionRateLowerLimit=30", urlMap[key], APP_KEY, sign["nonce"], page, sign["signRand"], sign["times"], APP_VERSION), nil
-}
-
-/**
- *解析请求参数
- */
-func BindParams(options map[string]interface{}) (uri string) {
-	for _, option := range options {
-		switch option.(type) {
-		case int8:
-			//uri += key + "=" + strconv.Itoa(option) + "&"
-		case int16:
-			//uri += key + "=" + strconv.Itoa(option) + "&"
-		case int32:
-			//uri += key + "=" + strconv.Itoa(option) + "&"
-		case int64:
-			//uri += key + "=" + strconv.ParseInt(option) + "&"
-		case string:
-			//uri += key + "=" + option + "&"
-		case bool:
-		}
-	}
-	return uri
+	return fmt.Sprintf("%s?appKey=%s&nonce=%s&pageId=%v&pageSize=100&signRan=%s&timer=%d&version=%s", urlMap[key], APP_KEY, sign["nonce"], page, sign["signRand"], sign["times"], APP_VERSION), nil
 }
 
 /**
@@ -75,8 +53,4 @@ func BindParams(options map[string]interface{}) (uri string) {
 func GetRandBySixByte() string {
 	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 	return fmt.Sprintf("%06v", rnd.Int31n(1000000))
-}
-
-func GetGoodsList() {
-
 }
