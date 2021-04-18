@@ -1,17 +1,15 @@
 package v1
 
 import (
-	"encoding/json"
 	"gin-vue-admin/global"
 	"gin-vue-admin/model"
 	"gin-vue-admin/model/request"
 	"gin-vue-admin/model/response"
 	"gin-vue-admin/service"
 	"gin-vue-admin/utils"
+
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
-	"io/ioutil"
-	"net/http"
 )
 
 // @Tags AuthorityMenu
@@ -219,36 +217,4 @@ func GetMenuList(c *gin.Context) {
 			PageSize: pageInfo.PageSize,
 		}, "获取成功", c)
 	}
-}
-
-func CheckSign(c *gin.Context) {
-	sign := utils.BindSign()
-	resp , err := http.Get(sign)
-	if err != nil{
-		global.GVA_LOG.Error("数据抓取失败！", zap.Any("err", err))
-		response.FailWithMessage("数据抓取失败", c)
-		return
-	}
-	defer resp.Body.Close()
-	body , err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		global.GVA_LOG.Error("数据读取失败！", zap.Any("err", err))
-		response.FailWithMessage("数据读取失败", c)
-		return
-	}
-	newBody := &response.RespShopGoods{}
-	//数据映射
-	err = json.Unmarshal(body,newBody)
-	if err != nil{
-		global.GVA_LOG.Error("json序列化失败！", zap.Any("err", err))
-		response.FailWithMessage("json序列化失败", c)
-		return 
-	}
-	
-	if err = service.InsertMore(&newBody.Data.List); err != nil {
-		global.GVA_LOG.Error("批量插入数据失败", zap.Any("err", err))
-		response.FailWithMessage("批量插入数据失败", c)
-		return
-	}
-	response.Result(200,newBody,"", c)
 }

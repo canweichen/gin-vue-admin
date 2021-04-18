@@ -1,8 +1,9 @@
 package router
 
 import (
-	"gin-vue-admin/api/v1"
+	v1 "gin-vue-admin/api/v1"
 	"gin-vue-admin/middleware"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -11,7 +12,6 @@ func InitBaseRouter(Router *gin.RouterGroup) (R gin.IRoutes) {
 	{
 		BaseRouter.POST("login", v1.Login)
 		BaseRouter.POST("captcha", v1.Captcha)
-		BaseRouter.GET("checkSign", v1.CheckSign)
 	}
 	return BaseRouter
 }
