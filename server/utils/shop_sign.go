@@ -4,9 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"net/url"
 	"strings"
-
-	//"strconv"
 	"time"
 )
 
@@ -18,12 +17,13 @@ const (
 
 //请求接口Api
 var urlMap = map[string]string{
-	"GetGoodsList":       "https://openapi.dataoke.com/api/goods/get-goods-list",       //商品列表
-	"GetGoodsDetails":    "https://openapi.dataoke.com/api/goods/get-goods-details",    //单品详情
-	"PullGoodsByTime":    "https://openapi.dataoke.com/api/goods/pull-goods-by-time",   //定时拉取
-	"OpGoodsList":        "https://openapi.dataoke.com/api/goods/nine/op-goods-list",   //9.9元包邮
-	"GetBrandList":       "https://openapi.dataoke.com/api/tb-service/get-brand-list",  //品牌库
-	"ExplosiveGoodsList": "https://openapi.dataoke.com/api/goods/explosive-goods-list", //每日爆品推荐
+	"GetGoodsList":       "https://openapi.dataoke.com/api/goods/get-goods-list",        //商品列表
+	"GetGoodsDetails":    "https://openapi.dataoke.com/api/goods/get-goods-details",     //单品详情
+	"PullGoodsByTime":    "https://openapi.dataoke.com/api/goods/pull-goods-by-time",    //定时拉取
+	"OpGoodsList":        "https://openapi.dataoke.com/api/goods/nine/op-goods-list",    //9.9元包邮
+	"GetBrandList":       "https://openapi.dataoke.com/api/tb-service/get-brand-list",   //品牌库
+	"ExplosiveGoodsList": "https://openapi.dataoke.com/api/goods/explosive-goods-list",  //每日爆品推荐
+	"CreateTaoKouLing":   "https://openapi.dataoke.com/api/tb-service/creat-taokouling", //淘口令生成
 }
 
 //获取签名
@@ -45,6 +45,28 @@ func BindRequestParams(key string, page interface{}) (string, error) {
 	}
 	sign := BindSign()
 	return fmt.Sprintf("%s?appKey=%s&nonce=%s&pageId=%v&pageSize=100&signRan=%s&timer=%d&version=%s", urlMap[key], APP_KEY, sign["nonce"], page, sign["signRand"], sign["times"], APP_VERSION), nil
+}
+
+//生成淘口令
+func CreateTaoKouLing(key string, urls string) (string, error) {
+	text := "福建蓝梦科技股份有限公司"
+	text = url.QueryEscape(text)
+	if _, ok := urlMap[key]; !ok {
+		return "", fmt.Errorf("无效key:%s", key)
+	}
+	sign := BindSign()
+	return fmt.Sprintf("%s?appKey=%s&nonce=%s&signRan=%s&timer=%d&version=%s&text=%s&url=%s", urlMap[key], APP_KEY,
+		sign["nonce"], sign["signRand"], sign["times"], APP_VERSION, text, urls), nil
+}
+
+//生成淘口令
+func GetGoodsDetails(key string, id interface{}) (string, error) {
+	if _, ok := urlMap[key]; !ok {
+		return "", fmt.Errorf("无效key:%s", key)
+	}
+	sign := BindSign()
+	return fmt.Sprintf("%s?appKey=%s&nonce=%s&signRan=%s&timer=%d&version=%s&id=%v", urlMap[key], APP_KEY,
+		sign["nonce"], sign["signRand"], sign["times"], APP_VERSION, id), nil
 }
 
 /**

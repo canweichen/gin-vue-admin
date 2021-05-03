@@ -9,6 +9,7 @@ import (
 	"gin-vue-admin/utils"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -39,6 +40,12 @@ func GetGoodsList(c *gin.Context) {
 		global.GVA_LOG.Error("获取商品记录失败", zap.Any("err", err))
 		response.FailWithMessage("获取商品记录失败", c)
 		return
+	}
+	//图片校验
+	for key, item := range goodsList {
+		if item.MainPic[:5] != "https" {
+			goodsList[key].MainPic = "https:" + item.MainPic
+		}
 	}
 	response.OkWithDetailed(response.PageResult{
 		List:     goodsList,
@@ -104,4 +111,48 @@ func PostPullGoodsList(c *gin.Context) {
 		return
 	}
 	response.Result(0, newBody, "拉取成功", c)
+}
+
+// @Tags CreateTaoBaoLing
+// @Summary 生成淘口令
+// @Security ApiKeyAuth
+// @Produce  application/json
+// @Param data body request.Empty true "空"
+// @Success 200 {string} string "{"success":true,"data":{},"msg":"成功"}"
+// @Router /goods/createTaoLing [post]
+func CreateTaoBaoLing(c *gin.Context) {
+	//接收生成淘口令的url
+	urls := c.DefaultQuery("url", "")
+	if urls == "" {
+		response.FailWithMessage("链接不为空", c)
+		return
+	}
+	urls = url.QueryEscape(urls)
+	var err error
+	//生成淘口令
+	path, err := utils.CreateTaoKouLing("CreateTaoKouLing", urls)
+	//path, err := utils.GetGoodsDetails("GetGoodsDetails", 33235553)
+	if err != nil {
+		response.FailWithMessage("签名失败："+err.Error(), c)
+		return
+	}
+	resp, err := http.Get(path)
+	if err != nil {
+		response.FailWithMessage("淘口令成成失败:"+err.Error(), c)
+		return
+	}
+	defer resp.Body.Close()
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		response.FailWithMessage("数据接受失败:"+err.Error(), c)
+		return
+	}
+	//解析数据流
+	newData := &response.RespShopGoods{}
+	err = json.Unmarshal(data, newData)
+	if err != nil {
+		response.FailWithMessage("数据解析失败:"+err.Error(), c)
+		return
+	}
+	response.OkWithData(newData, c)
 }

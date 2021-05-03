@@ -10,8 +10,9 @@ import (
 func InitShopGoodsRouter(Router *gin.RouterGroup) (R gin.IRoutes) {
 	ShopGoodsRouter := Router.Group("goods").Use(middleware.OperationRecord())
 	{
-		ShopGoodsRouter.POST("getGoodsList", v1.GetGoodsList)   // 获取商品列表
-		ShopGoodsRouter.POST("pullGoods", v1.PostPullGoodsList) //拉取商品
+		ShopGoodsRouter.POST("getGoodsList", v1.GetGoodsList)     // 获取商品列表
+		ShopGoodsRouter.POST("pullGoods", v1.PostPullGoodsList)   //拉取商品
+		ShopGoodsRouter.GET("createTaoLing", v1.CreateTaoBaoLing) //生成淘口令
 	}
 	return ShopGoodsRouter
 }
